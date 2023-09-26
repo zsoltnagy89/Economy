@@ -1,0 +1,39 @@
+{
+  "0000100493": {
+    "rev": [
+      "SalesRevenueNet",
+      "Revenues"
+    ],
+    "cost_sale": [
+      "CostOfGoodsSold",
+      "CostOfGoodsAndServicesSold"
+    ],
+    "sale_gen_adm": [
+      "SellingGeneralAndAdministrativeExpense"
+    ],
+    "inpairm": [
+      "GoodwillImpairmentLoss"
+    ],
+    "op_income": [
+      "OperatingIncomeLoss"
+    ],
+    "int_income": [
+      "InvestmentIncomeInterest"
+    ],
+    "int_exp": [
+      "InterestAndDebtExpense"
+    ],
+    "inc_tax_exp": [
+      "IncomeTaxExpenseBenefit"
+    ],
+    "net_inc": [
+      "ProfitLoss"
+    ],
+    "shares": [
+      "WeightedAverageNumberOfDilutedSharesOutstanding"
+    ],
+    "eps_dil": [
+      "EarningsPerShareDiluted"
+    ]
+  }
+}
