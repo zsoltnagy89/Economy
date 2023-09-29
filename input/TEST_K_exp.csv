@@ -1,5 +1,0 @@
-﻿ticker;report;date;rev;cost_sale;r_d;sale_gen_adm;inpairm;other_charg;op_income;int_income;int_exp;inc_b_tax;inc_tax_exp;net_inc;shares;eps_nor;eps_dil;cash_cash_eq;short_inv;acc_rec;invent;other_curr_ass;tot_curr_ass;ppe_net;goodwill;intang_ass;other_ass;tot_ass;short_debt;acc_pay;other_curr_liab;tot_curr_liab;tot_long_debt;other_liab;tot_equity;tot_liab;depr_amort;stock_b_comp
-TEST;K;2018-09-02;;;;;;;;;;;;;;;;6055;1204;1669;11040;321;20289;19681;;;;40830;90;11237;2924;19926;6487;1314;13103;27727;;
-TEST;K;2019-09-01;152703;132886;;13502;;;4737;178;-150;4765;1061;3704;442923;;;8384;1060;1535;11395;1111;23485;20890;;;;45400;1699;11679;3792;23237;5124;1455;15584;29816;1492;595
-TEST;K;2020-08-30;166761;144939;;14687;;;5435;92;-160;5367;1308;4059;443901;;;12277;1028;1550;12242;1023;28120;21807;;;;55556;95;14172;3728;24844;7514;1935;18705;36851;1645;619
-TEST;K;2021-08-29;195929;170684;;16680;;;6708;143;-171;6680;1601;5079;444346;;;11258;917;1803;14215;1312;29505;23492;;;;59268;799;16278;4561;29441;6692;2415;18078;41190;1781;665
