@@ -1,13 +1,17 @@
 Hello
 I added a reqirement.txt to the env_files
 
-Recommended workflow:
-    0. Check company US-GAAP codes
-    0. Download IS & BS with US-GAAP codes
-    0. Crosscheck with SEC reports
-    0. Update IS & BS US-GAAP JSON files
+Recommended workflow (with notebook numbers):
+    a, Check company US-GAAP codes
+    a, Download IS & BS with US-GAAP codes
+    a, Crosscheck with SEC reports
+    a, Update IS & BS US-GAAP JSON files
     
-    1. Create company row from wikipedia in SQL main table
-    1. Load data into SQL statement tables
+    b, Create company row from wikipedia in SQL main table
+    b, Load data into SQL statement tables
     
-    3. Consume data...
+    c, Visualy check data befor deeper evaluation
+
+    d, Calculate value ratios
+
+    e, DCF modelling
