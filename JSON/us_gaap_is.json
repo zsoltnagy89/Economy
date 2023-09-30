@@ -107,5 +107,41 @@
     "eps_dil": [
       "EarningsPerShareDiluted"
     ]
+  },
+  "0001144519": {
+    "rev": [
+      "Revenues"
+    ],
+    "cost_sale": [
+      "CostOfGoodsAndServicesSold",
+      "CostOfGoodsSold"
+    ],
+    "sale_gen_adm": [
+      "SellingGeneralAndAdministrativeExpense"
+    ],
+    "inpairm": [
+      "GoodwillImpairmentLoss"
+    ],
+    "op_income": [
+      "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+    ],
+    "int_income": [
+      "InterestAndOtherIncome"
+    ],
+    "int_exp": [
+      "InterestExpense"
+    ],
+    "inc_tax_exp": [
+      "IncomeTaxExpenseBenefit"
+    ],
+    "net_inc": [
+      "NetIncomeLoss"
+    ],
+    "shares": [
+      "WeightedAverageNumberOfDilutedSharesOutstanding"
+    ],
+    "eps_dil": [
+      "EarningsPerShareDiluted"
+    ]
   }
 }
