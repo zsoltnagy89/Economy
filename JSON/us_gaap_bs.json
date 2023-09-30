@@ -51,5 +51,58 @@
     "tot_equity": [
       "StockholdersEquity"
     ]
+  },
+  "0000051253": {
+    "cash_cash_eq": [
+      "CashAndCashEquivalentsAtCarryingValue"
+    ],
+    "acc_rec": [
+      "ReceivablesNetCurrent"
+    ],
+    "invent": [
+      "InventoryNet"
+    ],
+    "other_curr_ass": [
+      "OtherAssetsCurrent"
+    ],
+    "tot_curr_ass": [
+      "AssetsCurrent"
+    ],
+    "ppe_net": [
+      "PropertyPlantAndEquipmentNet"
+    ],
+    "goodwill": [
+      "Goodwill"
+    ],
+    "intang_ass": [
+      "FiniteLivedIntangibleAssetsNet"
+    ],
+    "other_ass": [
+      "OtherAssetsNoncurrent"
+    ],
+    "tot_ass": [
+      "Assets"
+    ],
+    "short_debt": [
+      "DebtCurrent"
+    ],
+    "acc_pay": [
+      "AccountsPayableCurrent"
+    ],
+    "other_curr_liab": [
+      "OtherLiabilitiesCurrent"
+    ],
+    "tot_curr_liab": [
+      "LiabilitiesCurrent"
+    ],
+    "tot_long_debt": [
+      "LongTermDebtNoncurrent"
+    ],
+    "other_liab": [
+      "OtherLiabilitiesNoncurrent"
+    ],
+    "tot_equity": [
+      "StockholdersEquity"
+    ]
   }
 }
