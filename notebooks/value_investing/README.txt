@@ -1,9 +1,7 @@
 0. Leszeded a statement adatokat
 1. Dobd ki: Net Income/Starting Line (AS),
-2. Excelben lecsereled a ,-t semmire az ezreseknel
-3. Minden - hianyzo adatot lecserelsz 0-ra
-4. Ceg honalpjarol leszeded a reszveny szamot es beirod excelbe
-5. Betöltöd a notebookba
+2. Ceg honalpjarol leszeded a reszveny szamot, de csak a millio integert es beirod excelbe!!!!!
+3. Betöltöd a notebookba
 
 
 FONTOS!
