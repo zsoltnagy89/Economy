@@ -6,3 +6,6 @@
 
 FONTOS!
 Hasnalj _national.ipynb filet ha nemzeti valutaba akarsz szamolni!
+
+
+Teszteljuk ezt a sort!
