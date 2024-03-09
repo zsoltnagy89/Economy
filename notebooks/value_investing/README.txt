@@ -7,3 +7,9 @@
 
 FONTOS!
 Hasnalj _national.ipynb filet ha nemzeti valutaba akarsz szamolni!
+
+
+Workflow:
+1. minden heten csekkold a fö piacokat a mentett parameterkkel
+2. gyujtsd ki mely cegek maradnak a filteren es estek nagyot mostanabn
+3. elemezd a cegeket
