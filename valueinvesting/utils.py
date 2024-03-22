@@ -272,6 +272,15 @@ def get_currency_share_price_correlation(share_name, usd_nat_curr, ticker_all_pr
     plt.legend()
     plt.show()
 
+def get_percentiles(input=pd.Series):
+    # get last value of the series
+    last_value = input.iloc[-1]
+    # order Series element and get reordered index of the current value
+    index = input.sort_values().values.searchsorted(last_value)
+    # calculate the percentile of the last/current value
+    position = (index + 1) / len(input) * 100
+    return round(position)
+
 def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], owned_shares=pd.DataFrame):
     # select share's bought list
     bought_date = list(owned_shares['date'])
@@ -301,7 +310,7 @@ def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], 
             plt.axvline(input_df[column].quantile(0.9), color='red', linestyle='dashed', linewidth=1, label='P90')
             plt.xlabel(column.capitalize())
             plt.ylabel('Frequency')
-            plt.title(str(column.capitalize()) + ' - ' + str(datetime.date.today()))
+            plt.suptitle(str(column.capitalize()) + ' percentile currently is ' + str(get_percentiles(input_df[column]))+ '% - ' + str(datetime.date.today()))
             plt.legend()
             plt.show()
         except:
