@@ -356,3 +356,122 @@ def get_historical_analouges(input_df, ticker_all_price, share_name, tolerance=0
         plt.title(str(column.capitalize()) + ' - ' + str(datetime.date.today()))
         plt.legend()
         plt.show()
+
+def get_country_stocks(country='norway'):
+    '''
+    Get the basic info related to a specific country's stocks.
+    '''
+    input_route = f"../data/extras/countries_stocks.csv"
+    stock_data = pd.read_csv(input_route)
+    # optional filter
+    stock_data = stock_data[stock_data['country'] == country]
+    return stock_data
+
+def create_summary_value_table(input=pd.DataFrame):
+    '''
+    It's a mass that calculate the value ratio summary table.
+    '''
+    # output lists
+    countr = []
+    ticker = []
+    sec = []
+    industr = []
+    roe_ratio = []
+    pb_ratio = []
+    ps_ratio = []
+    evrv_ratio = []
+    de_ratio = []
+    current_ratio = []
+    roe_perc = []
+    pb_perc = []
+    ps_perc = []
+    evrv_perc = []
+    de_perc = []
+    current_perc = []
+    # calculate value ratios and percentiles
+    for index in range(len(input)):
+        # set boundary conditions
+        evaluate_last_X_years = True
+        X=10
+        currency_pair = input.currency_pair[index]
+        numbers_in_currency = input.numbers_in_currency[index]
+        share_name = input.share_name[index]
+        country = input.country[index]
+        sector = input.sector[index]
+        industry = input.industry[index]
+        # read accounting data
+        try:
+            route = f"../data/input/countries/{country}/{share_name}_data.csv"
+            data = pd.read_csv(route, sep=';', parse_dates=['date'])
+            data = replace_format_input(data)
+        except:
+            print('Unsuccessfull data load! Relative route hardcoded in fucntion, it could be the issue!')
+        # filter out unnecessary old data
+        if evaluate_last_X_years:
+            data = data[data['date'] > datetime.datetime.today() - datetime.timedelta(days=X*366+93)]
+            data = data.reset_index(drop=True)
+        # calculate quarterly report availablilty date
+        try:
+            data = calculate_real_date(data)
+        except:
+            print('Quarterly availability date calculation error!')
+        # drop unnecesarry columns
+        try:
+            data = filter_raw_data(data)
+        except:
+            print('Column filter unsuccessful!')
+        # pull historical USD/national currency rates and add to dataframe
+        try:
+            data['usd_nat_currency'] = daily_price(
+            ticker=currency_pair,
+            end=data['date'],
+            days_earlier=90
+            )
+            # drop rows, when USD rates wasn't available
+            data = data[data['usd_nat_currency'].notna()]
+        except:
+            print('Historical USD pull error!')
+        # convert columns into national currency if necessary
+        try:
+            if numbers_in_currency == 'USD':
+                data_nat_curr = convert_national_currency(input_data=data, currency=data)
+            else:
+                data_nat_curr = data.copy()
+        except:
+            print('Column USD to national currency conversion error!')
+        # filter unnecessary columns
+        filtered_nat_curr = calculate_input_value_ratios(data_nat_curr)
+        #calculate input to value ratios
+        ratios_nat_curr = ratios_input_filter(filtered_nat_curr)
+        ratios_nat_curr = evaluate_performance(input=filtered_nat_curr, output=ratios_nat_curr)
+        # pull weekly share prices and merge with the value ratios
+        merged_nat_curr = add_share_prices_to_value_ratios(share_name, data, ratios_nat_curr)
+        # calculate value ratios
+        merged_nat_curr = price_ratios(merged_nat_curr)
+        # add results to lists
+        try:
+            countr.append(country)
+            ticker.append(share_name)
+            sec.append(sector)
+            industr.append(industry)
+            roe_ratio.append(merged_nat_curr['roe'].iloc[-1])
+            pb_ratio.append(merged_nat_curr['pb_ratio'].iloc[-1])
+            ps_ratio.append(merged_nat_curr['ps_ratio'].iloc[-1])
+            evrv_ratio.append(merged_nat_curr['ev_revenue'].iloc[-1])
+            de_ratio.append(merged_nat_curr['debt_to_equity'].iloc[-1])
+            current_ratio.append(merged_nat_curr['current_ratio'].iloc[-1])
+            roe_perc.append(get_percentiles(merged_nat_curr['roe']))
+            pb_perc.append(get_percentiles(merged_nat_curr['pb_ratio']))
+            ps_perc.append(get_percentiles(merged_nat_curr['ps_ratio']))
+            evrv_perc.append(get_percentiles(merged_nat_curr['ev_revenue']))
+            de_perc.append(get_percentiles(merged_nat_curr['debt_to_equity']))
+            current_perc.append(get_percentiles(merged_nat_curr['current_ratio']))
+        except:
+            print('Value adding to list error!')
+        print(str(share_name) + ' has been finished successfuly!')
+    # calculate result
+    result = pd.DataFrame(
+            list(zip(countr, ticker, sec, industr, roe_ratio, pb_ratio, ps_ratio, evrv_ratio, de_ratio, current_ratio, roe_perc, pb_perc, ps_perc, evrv_perc, de_perc, current_perc)),
+            columns =['country', 'ticker', 'sector', 'industry','roe_ratio', 'pb_ratio', 'ps_ratio', 'evrv_ratio', 'de_ratio', 'current_ratio', 'roe_perc', 'pb_perc', 'ps_perc', 'evrv_perc', 'de_perc', 'current_perc']
+        )
+    return result
