@@ -102,10 +102,11 @@ def calculate_real_date(input):
     '''
     Calculate the estimated date when the quaterly report could be available, called real date.
     '''
+    # if "real_date" not in input.columns: --> es hasznalhato amig megy az updateles
     result = []
     for timestamp in input['date']:
         if timestamp.month == 12:
-            result.append(timestamp + datetime.timedelta(days=42))
+            result.append(timestamp + datetime.timedelta(days=45))
         else:
             result.append(timestamp + datetime.timedelta(days=21))
     input['real_date'] = result
