@@ -122,11 +122,16 @@ def calculate_input_value_ratios(input=pd.DataFrame, report='Q'):
         multiplier = 4
     else:
         multiplier = 2
+    # rcalculate TTM
+    input['net_profit_ttm'] = input['net_profit'].rolling(multiplier).sum()
+    input['cash_from_operating_activities_ttm'] = input['cash_from_operating_activities'].rolling(multiplier).sum()
+    input['capex_ttm'] = input['net_profit'].rolling(multiplier).sum()
     # calculation
-    input['eps'] = (input['net_profit'] * multiplier) / input['shares'] # quaterly corrected here --> multipled by X
+    input['eps'] = input['net_profit_ttm'] / input['shares'] # trailing twelve month
     input['bv_per_share'] = (input['total_assets']-input['total_liab']) / input['shares']
-    input['fcf'] = (multiplier * input['cash_from_operating_activities']) - (input['capex'] * multiplier) # quaterly corrected here --> multipled by X
+    input['fcf'] = input['cash_from_operating_activities_ttm'] - input['capex_ttm'] # trailing twelve month
     input['fcf_per_share'] = input['fcf'] / input['shares']
+    # don't drop np.NaN --> those are dropped in evaluate_performance()
     return input
 
 def ratios_input_filter(input=pd.DataFrame):
@@ -158,6 +163,10 @@ def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame, report='Q'):
         multiplier = 4
     else:
         multiplier = 2
+    # calculate TTMs
+    input['revenue_ttm'] = input['revenue'].rolling(multiplier).sum()
+    input['cogs_ttm'] = input['cogs'].rolling(multiplier).sum()
+    input['net_profit_ttm'] = input['net_profit'].rolling(multiplier).sum()
     # evauleat short term debt
     output['current_ratio'] = input['curr_assets'] / input['curr_liab']
     output['quick_ratio'] = (input['curr_assets'] - input['inventory']) / input['curr_liab']
@@ -167,18 +176,19 @@ def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame, report='Q'):
     output['equity_ratio'] = (input['total_assets'] - input['total_liab']) / input['total_assets']
     output['debt_ratio'] = input['total_liab'] / input['total_assets']
     # evlauate management --> based on efficiency ratios
-    output['acc_rec_ratio'] = (multiplier * input['revenue']) / input['acc_rec']
-    output['acc_pay_ratio'] = (-1 * multiplier * input['cogs']) / input['acc_pay']
-    output['cash_turnover'] = (multiplier * input['revenue']) / input['cash']
-    output['inventory_turnover'] = (-1 * multiplier * input['cogs']) / input['inventory']
+    output['acc_rec_ratio'] = input['revenue_ttm'] / input['acc_rec']
+    output['acc_pay_ratio'] = (-1 * input['cogs_ttm']) / input['acc_pay']
+    output['cash_turnover'] = input['revenue_ttm'] / input['cash']
+    output['inventory_turnover'] = (-1 * input['cogs_ttm']) / input['inventory']
     # test economy moat
     output['gross_profit_margin'] = input['gross_profit'] / input['revenue']
     output['net_profit_margin'] = input['net_profit'] / input['revenue']
-    output['roa'] = (multiplier * input['net_profit']) / input['total_assets']
-    output['roe'] = (multiplier * input['net_profit']) / (input['total_assets'] - input['total_liab'])
-    # replace possible Nan-s to 0
-    for column in output.columns:
-        output[column] = output[column].fillna(0)
+    output['roa'] = input['net_profit_ttm'] / input['total_assets']
+    output['roe'] = input['net_profit_ttm'] / (input['total_assets'] - input['total_liab'])
+    # drop the first 3 rows with np.NaN (side effect of rolling().sum())
+    output = output.dropna()
+    output = output.reset_index(drop=True)
+
     return output
 
 def add_share_prices_to_value_ratios(share_name, data, ratios_nat_curr):
