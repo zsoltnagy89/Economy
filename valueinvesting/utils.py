@@ -103,13 +103,14 @@ def calculate_real_date(input):
     Calculate the estimated date when the quaterly report could be available, called real date.
     '''
     # if "real_date" not in input.columns: --> es hasznalhato amig megy az updateles
-    result = []
-    for timestamp in input['date']:
-        if timestamp.month == 12:
-            result.append(timestamp + datetime.timedelta(days=45))
-        else:
-            result.append(timestamp + datetime.timedelta(days=21))
-    input['real_date'] = result
+    if "real_date" not in input.columns:
+        result = []
+        for timestamp in input['date']:
+            if timestamp.month == 12:
+                result.append(timestamp + datetime.timedelta(days=45))
+            else:
+                result.append(timestamp + datetime.timedelta(days=21))
+        input['real_date'] = result
     return input
 
 def calculate_input_value_ratios(input=pd.DataFrame, report='Q'):
@@ -403,7 +404,7 @@ def create_summary_value_table(input=pd.DataFrame):
         # read accounting data
         try:
             route = f"../data/input/countries/{country}/{share_name}_data.csv"
-            data = pd.read_csv(route, sep=';', parse_dates=['date'])
+            data = pd.read_csv(route, sep=';', parse_dates=['date'])    # ide tedd be h pase-olja a "real_date"-et is!
             data = replace_format_input(data)
         except:
             print('Unsuccessfull data load! Relative route hardcoded in fucntion, it could be the issue!')
