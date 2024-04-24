@@ -131,7 +131,7 @@ def calculate_input_value_ratios(input=pd.DataFrame, report='Q'):
     input['bv_per_share'] = (input['total_assets']-input['total_liab']) / input['shares']
     input['fcf'] = input['cash_from_operating_activities_ttm'] - input['capex_ttm'] # trailing twelve month
     input['fcf_per_share'] = input['fcf'] / input['shares']
-    # don't drop np.NaN --> those are dropped in evaluate_performance()
+    # don't drop np.NaN --> those are replaced to 0-s in evaluate_performance()
     return input
 
 def ratios_input_filter(input=pd.DataFrame):
@@ -185,9 +185,9 @@ def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame, report='Q'):
     output['net_profit_margin'] = input['net_profit'] / input['revenue']
     output['roa'] = input['net_profit_ttm'] / input['total_assets']
     output['roe'] = input['net_profit_ttm'] / (input['total_assets'] - input['total_liab'])
-    # drop the first 3 rows with np.NaN (side effect of rolling().sum())
-    output = output.dropna()
-    output = output.reset_index(drop=True)
+    # replace possible Nan-s to 0
+    for column in output.columns:
+        output[column] = output[column].fillna(0)
 
     return output
 
@@ -414,7 +414,7 @@ def create_summary_value_table(input=pd.DataFrame):
         # read accounting data
         try:
             route = f"../data/input/countries/{country}/{share_name}_data.csv"
-            data = pd.read_csv(route, sep=';', parse_dates=['date'])    # ide tedd be h pase-olja a "real_date"-et is!
+            data = pd.read_csv(route, sep=';', parse_dates=['date', 'real_date'])
             data = replace_format_input(data)
         except:
             print('Unsuccessfull data load! Relative route hardcoded in fucntion, it could be the issue!')
