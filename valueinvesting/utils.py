@@ -487,3 +487,66 @@ def create_summary_value_table(input=pd.DataFrame):
             columns =['country', 'ticker', 'sector', 'industry','roe_ratio', 'pb_ratio', 'ps_ratio', 'evrv_ratio', 'de_ratio', 'current_ratio', 'roe_perc', 'pb_perc', 'ps_perc', 'evrv_perc', 'de_perc', 'current_perc']
         )
     return result
+
+def utility_evaluation(input_df=pd.DataFrame, extra_parameters=[], owned_shares=pd.DataFrame):
+    '''
+    This function creates 2 plots. The first comes with the price, P/B, P/S and EV/Rev time series,
+    the second is the distribution of normaled weekly values with the 200 days moving average.
+    It's recommended to use in case of shares with monotonous increasing price.
+    '''
+    # predifined parameters to plot - extendable
+    selected_parameters = ['share_price', 'pb_ratio', 'ps_ratio', 'ev_revenue']
+    # add extra user requested value parameters
+    selected_parameters = selected_parameters + extra_parameters
+
+    # calculate index list related to owned shares
+    index_list = []
+    for date in owned_shares['date']:
+        index = -1 * len(input_df.loc[input_df['real_date'] > date])
+        index_list.append(index)
+
+    for elem in selected_parameters:
+        raw = input_df[elem]
+        mva_50 = input_df[elem].rolling(50).mean()
+        mva_100 = input_df[elem].rolling(100).mean()
+        mva_200 = input_df[elem].rolling(200).mean()
+        diff_200 = (raw - mva_200) / mva_200
+
+        # time series splited plot
+        # fist line:
+        plt.figure(figsize=(15,8))
+        plt.subplot(211)
+        plt.plot(raw,label= elem.capitalize())
+        plt.plot(mva_50,label= 'MA 50 days')
+        plt.plot(mva_100,label= 'MA 100 days')
+        plt.plot(mva_200,label= 'MA 200 days')
+        plt.xlim(left=200, right=diff_200.index[-1])
+        for i in index_list:
+            plt.axvline(len(mva_200) + i, color='green', linewidth=2, label='Owned stock')
+        plt.legend(loc='best')
+        # second block
+        plt.subplot(212)
+        plt.plot(diff_200,color='black', linewidth=1, label= '(' + str(elem.capitalize()) + ' - MVA_200) / MVA_200')
+        plt.xlim(left=200, right=diff_200.index[-1])
+        for i in index_list:
+            plt.axvline(len(mva_200) + i, color='green', linewidth=2, label='Owned stock')
+        plt.legend(loc='best')
+        plt.xlabel('Week number')
+        plt.show()
+
+        # histogram
+        plt.hist(diff_200.values, bins=30, edgecolor='black', color='gray')
+        plt.axvline(diff_200.iloc[-1], color='k', linestyle='dotted', linewidth=2, label='Current Value')
+        plt.axvline(diff_200.quantile(0.1), color='green', linestyle='dashed', linewidth=1, label='P10')
+        plt.axvline(diff_200.quantile(0.3), color='green', linestyle='dashed', linewidth=1, label='P30')
+        plt.axvline(diff_200.quantile(0.5), color='blue', linestyle='dashed', linewidth=1, label='Median')
+        plt.axvline(diff_200.quantile(0.7), color='orange', linestyle='dashed', linewidth=1, label='P70')
+        plt.axvline(diff_200.quantile(0.9), color='red', linestyle='dashed', linewidth=1, label='P90')
+        for i in index_list:
+                # plot the specific parameter related to the stock buying date
+                plt.axvline(diff_200.iloc[len(diff_200) + i], color='red', linewidth=2, label='Owned Shares')
+        plt.xlabel(elem.capitalize())
+        plt.ylabel('Frequency')
+        plt.suptitle('(' + str(elem.capitalize()) + ' - MVA 200) / MVA 200 percentile currently is ' + str(get_percentiles(diff_200))+ '% - ' + str(datetime.date.today()))
+        plt.legend()
+        plt.show()
