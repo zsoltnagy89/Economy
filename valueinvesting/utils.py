@@ -295,8 +295,6 @@ def get_percentiles(input=pd.Series):
     return round(position)
 
 def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], owned_shares=pd.DataFrame):
-    # select share's bought list
-    bought_date = list(owned_shares['date'])
     # predifined value parameters to plot
     selected_parameters = ['roa', 'roe', 'pe_ratio', 'pb_ratio', 'ps_ratio', 'ev_revenue', 'debt_to_equity', 'current_ratio']
     # add extra user requested value parameters
@@ -309,11 +307,11 @@ def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], 
             #plot data
             plt.hist(input_df[column].values, bins=30, edgecolor='black', color='gray')
             # plot values related to buying date 
-            for date in bought_date:
+            for date in owned_shares['date'].to_list():
                 # filter input dataframe and keep the closest row to the timestamp
                 input_df_slice = input_df.loc[(input_df['real_date'] >= date - datetime.timedelta(days=4)) & (input_df['real_date'] <= date + datetime.timedelta(days=4))]
                 # plot the specific parameter related to the stock buying date
-                plt.axvline(input_df_slice[column].values.min(), color='red', linewidth=2, label='Owned Shares')
+                plt.axvline(input_df_slice[column].values.mean(), color='red', linewidth=2, label='Owned Shares')
             # plot percentiles and curren values
             plt.axvline(input_df[column].iloc[-1], color='k', linestyle='dotted', linewidth=2, label='Current Value')
             plt.axvline(input_df[column].quantile(0.1), color='green', linestyle='dashed', linewidth=1, label='P10')
@@ -323,7 +321,9 @@ def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], 
             plt.axvline(input_df[column].quantile(0.9), color='red', linestyle='dashed', linewidth=1, label='P90')
             plt.xlabel(column.capitalize())
             plt.ylabel('Frequency')
-            plt.suptitle(str(column.capitalize()) + ' percentile currently is ' + str(get_percentiles(input_df[column]))+ '% - ' + str(datetime.date.today()))
+            # calculate percentile value of latest parameter
+            current_pct = round(input_df[column].rank(pct=True).iloc[-1] * 100, 1)
+            plt.suptitle(str(column.capitalize()) + ' percentile currently is ' + str(current_pct)+ '% - ' + str(datetime.date.today()))
             plt.legend()
             plt.show()
         except:
