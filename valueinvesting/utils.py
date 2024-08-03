@@ -329,46 +329,48 @@ def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], 
         except:
             print(column + " diagram is missing due to error.")
 
-def list_intersect(input1, input2):
-    '''
-    Create a list of common elements from 2 lists.
-    '''
-    result = [x for x in input1 if x in input2]
-    return result
+# # DEPRECIATE --> used only by get_historical_analouges()
+# def list_intersect(input1, input2):
+#     '''
+#     Create a list of common elements from 2 lists.
+#     '''
+#     result = [x for x in input1 if x in input2]
+#     return result
 
-def get_historical_analouges(input_df, ticker_all_price, share_name, tolerance=0.2, owned_shares=pd.DataFrame):
-    # select share's bought list
-    bought_date = list(owned_shares['date'])
-    # collect dates when the given value variable was between tolearance limit to current one
-    roe = input_df[(input_df['roe']<= input_df['roe'].iloc[-1] * (1+tolerance)) & (input_df['roe']>= input_df['roe'].iloc[-1] * (1- tolerance))]['date'].values
-    pbr = input_df[(input_df['pb_ratio']<= input_df['pb_ratio'].iloc[-1] * (1+tolerance)) & (input_df['pb_ratio']>= input_df['pb_ratio'].iloc[-1] * (1- tolerance))]['date'].values
-    psr = input_df[(input_df['ps_ratio']<= input_df['ps_ratio'].iloc[-1] * (1+tolerance)) & (input_df['ps_ratio']>= input_df['ps_ratio'].iloc[-1] * (1- tolerance))]['date'].values
-    de = input_df[(input_df['debt_to_equity']<= input_df['debt_to_equity'].iloc[-1] * (1+tolerance)) & (input_df['debt_to_equity']>= input_df['debt_to_equity'].iloc[-1] * (1- tolerance))]['date'].values
-    curr = input_df[(input_df['current_ratio']<= input_df['current_ratio'].iloc[-1] * (1+tolerance)) & (input_df['current_ratio']>= input_df['current_ratio'].iloc[-1] * (1- tolerance))]['date'].values
+# # DEPRECIATE --> only duplicate plots with lots of or 0 vertical red lines --> pointles
+# def get_historical_analouges(input_df, ticker_all_price, share_name, tolerance=0.2, owned_shares=pd.DataFrame):
+#     # select share's bought list
+#     bought_date = list(owned_shares['date'])
+#     # collect dates when the given value variable was between tolearance limit to current one
+#     roe = input_df[(input_df['roe']<= input_df['roe'].iloc[-1] * (1+tolerance)) & (input_df['roe']>= input_df['roe'].iloc[-1] * (1- tolerance))]['date'].values
+#     pbr = input_df[(input_df['pb_ratio']<= input_df['pb_ratio'].iloc[-1] * (1+tolerance)) & (input_df['pb_ratio']>= input_df['pb_ratio'].iloc[-1] * (1- tolerance))]['date'].values
+#     psr = input_df[(input_df['ps_ratio']<= input_df['ps_ratio'].iloc[-1] * (1+tolerance)) & (input_df['ps_ratio']>= input_df['ps_ratio'].iloc[-1] * (1- tolerance))]['date'].values
+#     de = input_df[(input_df['debt_to_equity']<= input_df['debt_to_equity'].iloc[-1] * (1+tolerance)) & (input_df['debt_to_equity']>= input_df['debt_to_equity'].iloc[-1] * (1- tolerance))]['date'].values
+#     curr = input_df[(input_df['current_ratio']<= input_df['current_ratio'].iloc[-1] * (1+tolerance)) & (input_df['current_ratio']>= input_df['current_ratio'].iloc[-1] * (1- tolerance))]['date'].values
     
-    # create intersect of the above timestamp list
-    test1 =  list_intersect(roe, pbr)
-    test2 =  list_intersect(test1, psr)
-    test3 =  list_intersect(test2, de)
-    test4 =  list_intersect(test3, curr)
-    print(len(test4), 'timestemos have been found!')
+#     # create intersect of the above timestamp list
+#     test1 =  list_intersect(roe, pbr)
+#     test2 =  list_intersect(test1, psr)
+#     test3 =  list_intersect(test2, de)
+#     test4 =  list_intersect(test3, curr)
+#     print(len(test4), 'timestemos have been found!')
 
-    # plot results
-    for column in ['roe', 'pb_ratio', 'ps_ratio', 'ev_revenue', 'debt_to_equity', 'current_ratio']:
-        fig, ax1 = plt.subplots(figsize=(15, 6))
-        ax2 = ax1.twinx()
-        ax1.plot(input_df['real_date'], input_df[column], color='k', label=column)
-        ax2.plot(ticker_all_price.index, ticker_all_price['Close'], color='b', label=share_name)
-        for date in bought_date:
-            plt.axvline(date, color='green', linewidth=2, label='Owned stock')
-        for timestamp in test4:     
-            plt.axvline(timestamp, color='red', linestyle='dashed', linewidth=1)
-        ax1.set_xlabel('Date')
-        ax1.set_ylabel(column.capitalize(), color='k')
-        ax2.set_ylabel('Share price (national currency)', color='b')
-        plt.title(str(column.capitalize()) + ' - ' + str(datetime.date.today()))
-        plt.legend()
-        plt.show()
+#     # plot results
+#     for column in ['roe', 'pb_ratio', 'ps_ratio', 'ev_revenue', 'debt_to_equity', 'current_ratio']:
+#         fig, ax1 = plt.subplots(figsize=(15, 6))
+#         ax2 = ax1.twinx()
+#         ax1.plot(input_df['real_date'], input_df[column], color='k', label=column)
+#         ax2.plot(ticker_all_price.index, ticker_all_price['Close'], color='b', label=share_name)
+#         for date in bought_date:
+#             plt.axvline(date, color='green', linewidth=2, label='Owned stock')
+#         for timestamp in test4:     
+#             plt.axvline(timestamp, color='red', linestyle='dashed', linewidth=1)
+#         ax1.set_xlabel('Date')
+#         ax1.set_ylabel(column.capitalize(), color='k')
+#         ax2.set_ylabel('Share price (national currency)', color='b')
+#         plt.title(str(column.capitalize()) + ' - ' + str(datetime.date.today()))
+#         plt.legend()
+#         plt.show()
 
 def get_country_stocks(country='norway'):
     '''
