@@ -113,19 +113,44 @@ def calculate_real_date(input):
         input['real_date'] = result
     return input
 
+def get_ttm(input_df=pd.DataFrame, column=str, multiplier=int):
+    '''
+    This function calculate the sum of a selected parameter's
+    unique values considering the last year.
+    multiplier= the number of reports per year
+    '''
+    result = []
+    # itereate the real date data and step-by-step calclute the ttm values
+    for date in input_df['real_date'].values:
+        # create DataFrame slices related to the last year data
+        # 56 wekks because if a company report with a little delay it won't be 0
+        ttm_slice = input_df.loc[(input_df['real_date'] <= date) & (input_df['real_date'] > date - pd.Timedelta('56 W'))]
+        # create unique element list
+        unique_values = ttm_slice[column].unique()[-multiplier:]
+        # DILEMA --> if I'm in the 1st year (I dont have every report from the year, what to do?
+        # I decided to fill with np.Nan these rows, it looks to the safiest solution
+        if len(unique_values) >= multiplier:
+            result.append(sum(unique_values))
+        else:
+            result.append(None)
+    return result
+
 def calculate_input_value_ratios(input=pd.DataFrame, report='Q'):
     '''
-    Calculate EPS, Book Value per share, FCF and FCF per shares.
+    Calculate EPS, Book Value per share, FCF and FCF per shares, REvenue TTM, COGS TTM.
+    Here happens the TTM calculation.
     '''
     # set conversion between half year and quarterly report
     if report == 'Q':
         multiplier = 4
     else:
         multiplier = 2
-    # rcalculate TTM
-    input['net_profit_ttm'] = input['net_profit'].rolling(multiplier).sum()
-    input['cash_from_operating_activities_ttm'] = input['cash_from_operating_activities'].rolling(multiplier).sum()
-    input['capex_ttm'] = input['net_profit'].rolling(multiplier).sum()
+    # calculate TTM
+    input['net_profit_ttm'] = get_ttm(input_df=input, column='net_profit', multiplier=multiplier)
+    input['cash_from_operating_activities_ttm'] = get_ttm(input_df=input, column='cash_from_operating_activities', multiplier=multiplier)
+    input['capex_ttm'] = get_ttm(input_df=input, column='capex', multiplier=multiplier)
+    input['revenue_ttm'] = get_ttm(input_df=input, column='revenue', multiplier=multiplier)
+    input['cogs_ttm'] = get_ttm(input_df=input, column='cogs', multiplier=multiplier)
     # calculation
     input['eps'] = input['net_profit_ttm'] / input['shares'] # trailing twelve month
     input['bv_per_share'] = (input['total_assets']-input['total_liab']) / input['shares']
@@ -136,7 +161,7 @@ def calculate_input_value_ratios(input=pd.DataFrame, report='Q'):
 
 def ratios_input_filter(input=pd.DataFrame):
     '''
-    Filter out and keep only the Value ratios, revenue and date.
+    Filter out and keep only the Value ratios, revenue date, and TTM values.
     '''
     ratios = input[
                 [
@@ -149,7 +174,9 @@ def ratios_input_filter(input=pd.DataFrame):
                 'fcf',
                 'fcf_per_share',
                 'cash',
-                'total_liab'
+                'total_liab',
+                'revenue_ttm',
+                'cogs_ttm'
                 ]
             ].copy()
     return ratios
@@ -158,15 +185,6 @@ def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame, report='Q'):
     '''
     Calulate Financial ratios. Evaluate short-term, long-term debt, management performance and test economic moat.
     '''
-    # set conversion between half year and quarterly report
-    if report == 'Q':
-        multiplier = 4
-    else:
-        multiplier = 2
-    # calculate TTMs
-    input['revenue_ttm'] = input['revenue'].rolling(multiplier).sum()
-    input['cogs_ttm'] = input['cogs'].rolling(multiplier).sum()
-    input['net_profit_ttm'] = input['net_profit'].rolling(multiplier).sum()
     # evauleat short term debt
     output['current_ratio'] = input['curr_assets'] / input['curr_liab']
     output['quick_ratio'] = (input['curr_assets'] - input['inventory']) / input['curr_liab']
@@ -215,17 +233,12 @@ def price_ratios(input=pd.DataFrame, report='Q'):
     '''
     Calculate Value metrics from quaterly data. The original metrics have been develoed to annual data. I use quaterly data.
     '''
-    # set conversion between half year and quarterly report
-    if report == 'Q':
-        multiplier = 4
-    else:
-        multiplier = 2
     # calculation
-    input['pe_ratio'] = input['share_price'] / input['eps'] # previously multiplied by X (quaterly correction)
+    input['pe_ratio'] = input['share_price'] / input['eps'] # previously multiplied by report number
     input['pb_ratio'] = input['share_price'] / input['bv_per_share'] # don't need to quaterly correct (Income Statement data)
-    input['ps_ratio'] = (input['share_price'] * input['shares']) / (input['revenue'] * multiplier) # quaterly corrected here --> multipled by X
-    input['ev_revenue'] = ((input['share_price'] * input['shares']) + input['total_liab'] - input['cash']) / (input['revenue'] * multiplier)
-    input['pfcf_ratio'] = (input['share_price'] * input['shares']) / input['fcf']  # previously multiplied by X (quaterly correction)
+    input['ps_ratio'] = (input['share_price'] * input['shares']) / (input['revenue_ttm']) # previously multiplied by report number
+    input['ev_revenue'] = ((input['share_price'] * input['shares']) + input['total_liab'] - input['cash']) / (input['revenue_ttm'])
+    input['pfcf_ratio'] = (input['share_price'] * input['shares']) / input['fcf']  # previously multiplied by report number
     return input
 
 def get_historical_currency_rate(currency_pair, merged_nat_curr):
