@@ -284,6 +284,7 @@ def get_currency_share_price_correlation(share_name, usd_nat_curr, ticker_all_pr
     plt.legend()
     plt.show()
 
+# DEPRECIATA DOESN'T WORK PROPERLY --> USE pd.Series().rank(pct=True)
 def get_percentiles(input=pd.Series):
     # get last value of the series
     last_value = input.iloc[-1]
@@ -498,55 +499,66 @@ def utility_evaluation(input_df=pd.DataFrame, extra_parameters=[], owned_shares=
     selected_parameters = ['share_price', 'pb_ratio', 'ps_ratio', 'ev_revenue']
     # add extra user requested value parameters
     selected_parameters = selected_parameters + extra_parameters
-
-    # calculate index list related to owned shares
-    index_list = []
-    for date in owned_shares['date']:
-        index = -1 * len(input_df.loc[input_df['real_date'] > date])
-        index_list.append(index)
-
+    # iterate through the selected parameters
     for elem in selected_parameters:
-        raw = input_df[elem]
-        mva_50 = input_df[elem].rolling(50).mean()
-        mva_100 = input_df[elem].rolling(100).mean()
-        mva_200 = input_df[elem].rolling(200).mean()
-        diff_200 = (raw - mva_200) / mva_200
+        # iterate the parameters of interest
+        # calculate 49 weeks moving average --> yahoofinance 2yrs chart spacing, measured datediff
+        input_df[f"{elem}_mva_50"] = input_df[elem].rolling(49).mean()
+        # calculate 100 weeks moving average --> yahoofinance 2yrs chart spacing, measured datediff
+        input_df[f"{elem}_mva_100"] = input_df[elem].rolling(100).mean()
+        # calculate 149 weeks moving average --> yahoofinance 2yrs chart spacing, measured datediff
+        input_df[f"{elem}_mva_200"] = input_df[elem].rolling(149).mean()
+        # normalize weekly data with the MVG AVG values
+        # it shows a % value --> how % higher or lower the current value compared with the MVG AVG
+        input_df[f"{elem}_diff_200"] = (input_df[elem] - input_df[f"{elem}_mva_200"]) / input_df[f"{elem}_mva_200"]
+        # calulate every % value's percentile within the whole dataseries --> timeframe dependant!
+        input_df[f"{elem}_diff_200_pct"] = input_df[f"{elem}_diff_200"].rank(pct=True)
 
         # time series splited plot
         # fist line:
         plt.figure(figsize=(15,8))
         plt.subplot(211)
-        plt.plot(raw,label= elem.capitalize())
-        plt.plot(mva_50,label= 'MA 50 days')
-        plt.plot(mva_100,label= 'MA 100 days')
-        plt.plot(mva_200,label= 'MA 200 days')
-        plt.xlim(left=200, right=diff_200.index[-1])
-        for i in index_list:
-            plt.axvline(len(mva_200) + i, color='green', linewidth=2, label='Owned stock')
+        # plot the raw and MVG AVG values vs the date
+        plt.plot(input_df['real_date'], input_df[elem],label= elem.capitalize())
+        plt.plot(input_df['real_date'], input_df[f"{elem}_mva_50"],label= 'MA 50 days')
+        plt.plot(input_df['real_date'], input_df[f"{elem}_mva_100"],label= 'MA 100 days')
+        plt.plot(input_df['real_date'], input_df[f"{elem}_mva_200"],label= 'MA 200 days')
+        plt.xlim(left=input_df['real_date'].values[0], right=input_df['real_date'].values[-1])
+        # plot vertical lines based on the owned share data
+        for date in owned_shares['date'].values:
+            plt.axvline(date, color='green', linewidth=2, label='Owned stock')
         plt.legend(loc='best')
         # second block
         plt.subplot(212)
-        plt.plot(diff_200,color='black', linewidth=1, label= '(' + str(elem.capitalize()) + ' - MVA_200) / MVA_200')
-        plt.xlim(left=200, right=diff_200.index[-1])
-        for i in index_list:
-            plt.axvline(len(mva_200) + i, color='green', linewidth=2, label='Owned stock')
+        # plot the normalized difference value between the RAW and teh 200 MVG AVG values 
+        plt.plot(input_df['real_date'], input_df[f"{elem}_diff_200"], color='black', linewidth=1, label= '(' + str(elem.capitalize()) + ' - MVA_200) / MVA_200')
+        plt.xlim(left=input_df['real_date'].values[0], right=input_df['real_date'].values[-1])
+        # plot vertical lines based on the owned share data
+        for date in owned_shares['date'].values:
+            plt.axvline(date, color='green', linewidth=2, label='Owned stock')
         plt.legend(loc='best')
-        plt.xlabel('Week number')
+        plt.xlabel('Date')
         plt.show()
 
         # histogram
-        plt.hist(diff_200.values, bins=30, edgecolor='black', color='gray')
-        plt.axvline(diff_200.iloc[-1], color='k', linestyle='dotted', linewidth=2, label='Current Value')
-        plt.axvline(diff_200.quantile(0.1), color='green', linestyle='dashed', linewidth=1, label='P10')
-        plt.axvline(diff_200.quantile(0.3), color='green', linestyle='dashed', linewidth=1, label='P30')
-        plt.axvline(diff_200.quantile(0.5), color='blue', linestyle='dashed', linewidth=1, label='Median')
-        plt.axvline(diff_200.quantile(0.7), color='orange', linestyle='dashed', linewidth=1, label='P70')
-        plt.axvline(diff_200.quantile(0.9), color='red', linestyle='dashed', linewidth=1, label='P90')
-        for i in index_list:
-                # plot the specific parameter related to the stock buying date
-                plt.axvline(diff_200.iloc[len(diff_200) + i], color='red', linewidth=2, label='Owned Shares')
+        plt.hist(input_df[f"{elem}_diff_200"].values, bins=40, edgecolor='black', color='gray')
+        plt.axvline(input_df[f"{elem}_diff_200"].iloc[-1], color='k', linestyle='dotted', linewidth=2, label='Current Value')
+        plt.axvline(input_df[f"{elem}_diff_200"].quantile(0.1), color='green', linestyle='dashed', linewidth=1, label='P10')
+        plt.axvline(input_df[f"{elem}_diff_200"].quantile(0.3), color='green', linestyle='dashed', linewidth=1, label='P30')
+        plt.axvline(input_df[f"{elem}_diff_200"].quantile(0.5), color='blue', linestyle='dashed', linewidth=1, label='Median')
+        plt.axvline(input_df[f"{elem}_diff_200"].quantile(0.7), color='orange', linestyle='dashed', linewidth=1, label='P70')
+        plt.axvline(input_df[f"{elem}_diff_200"].quantile(0.9), color='red', linestyle='dashed', linewidth=1, label='P90')
+        # owned share plotting
+        for date in owned_shares['date'].values:
+            # select the last value before the buying date --> weekly data, so it means always Monday
+            plt.axvline(input_df[f"{elem}_diff_200"].loc[input_df['real_date'] <= date].iloc[-1], color='red', linewidth=2, label='Owned Shares')
+
         plt.xlabel(elem.capitalize())
         plt.ylabel('Frequency')
-        plt.suptitle('(' + str(elem.capitalize()) + ' - MVA 200) / MVA 200 percentile currently is ' + str(get_percentiles(diff_200))+ '% - ' + str(datetime.date.today()))
+        # print normalized current values percentile
+        normalized_pct = round(input_df[f"{elem}_diff_200_pct"].iloc[-1] * 100, 2)
+        plt.suptitle('(' + str(elem.capitalize()) + ' - MVA 200) / MVA 200 percentile currently is ' + str(normalized_pct)+ '% - ' + str(datetime.date.today()))
         plt.legend()
         plt.show()
+
+    return input_df
