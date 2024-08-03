@@ -284,19 +284,7 @@ def get_currency_share_price_correlation(share_name, usd_nat_curr, ticker_all_pr
     plt.legend()
     plt.show()
 
-# DEPRECIATA DOESN'T WORK PROPERLY --> USE pd.Series().rank(pct=True)
-def get_percentiles(input=pd.Series):
-    # get last value of the series
-    last_value = input.iloc[-1]
-    # order Series element and get reordered index of the current value
-    index = input.sort_values().values.searchsorted(last_value)
-    # calculate the percentile of the last/current value
-    position = (index + 1) / len(input) * 100
-    return round(position)
-
 def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], owned_shares=pd.DataFrame):
-    # select share's bought list
-    bought_date = list(owned_shares['date'])
     # predifined value parameters to plot
     selected_parameters = ['roa', 'roe', 'pe_ratio', 'pb_ratio', 'ps_ratio', 'ev_revenue', 'debt_to_equity', 'current_ratio']
     # add extra user requested value parameters
@@ -309,11 +297,11 @@ def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], 
             #plot data
             plt.hist(input_df[column].values, bins=30, edgecolor='black', color='gray')
             # plot values related to buying date 
-            for date in bought_date:
+            for date in owned_shares['date'].to_list():
                 # filter input dataframe and keep the closest row to the timestamp
                 input_df_slice = input_df.loc[(input_df['real_date'] >= date - datetime.timedelta(days=4)) & (input_df['real_date'] <= date + datetime.timedelta(days=4))]
                 # plot the specific parameter related to the stock buying date
-                plt.axvline(input_df_slice[column].values.min(), color='red', linewidth=2, label='Owned Shares')
+                plt.axvline(input_df_slice[column].values.mean(), color='red', linewidth=2, label='Owned Shares')
             # plot percentiles and curren values
             plt.axvline(input_df[column].iloc[-1], color='k', linestyle='dotted', linewidth=2, label='Current Value')
             plt.axvline(input_df[column].quantile(0.1), color='green', linestyle='dashed', linewidth=1, label='P10')
@@ -323,7 +311,9 @@ def plot_histogram_value_parameters(input_df=pd.DataFrame, extra_parameters=[], 
             plt.axvline(input_df[column].quantile(0.9), color='red', linestyle='dashed', linewidth=1, label='P90')
             plt.xlabel(column.capitalize())
             plt.ylabel('Frequency')
-            plt.suptitle(str(column.capitalize()) + ' percentile currently is ' + str(get_percentiles(input_df[column]))+ '% - ' + str(datetime.date.today()))
+            # calculate percentile value of latest parameter
+            current_pct = round(input_df[column].rank(pct=True).iloc[-1] * 100, 1)
+            plt.suptitle(str(column.capitalize()) + ' percentile currently is ' + str(current_pct)+ '% - ' + str(datetime.date.today()))
             plt.legend()
             plt.show()
         except:
@@ -475,12 +465,13 @@ def create_summary_value_table(input=pd.DataFrame):
             evrv_ratio.append(merged_nat_curr['ev_revenue'].iloc[-1])
             de_ratio.append(merged_nat_curr['debt_to_equity'].iloc[-1])
             current_ratio.append(merged_nat_curr['current_ratio'].iloc[-1])
-            roe_perc.append(get_percentiles(merged_nat_curr['roe']))
-            pb_perc.append(get_percentiles(merged_nat_curr['pb_ratio']))
-            ps_perc.append(get_percentiles(merged_nat_curr['ps_ratio']))
-            evrv_perc.append(get_percentiles(merged_nat_curr['ev_revenue']))
-            de_perc.append(get_percentiles(merged_nat_curr['debt_to_equity']))
-            current_perc.append(get_percentiles(merged_nat_curr['current_ratio']))
+            # calculate the last values percentile and add to the output.
+            roe_perc.append(round(merged_nat_curr['roe'].rank(pct=True).iloc[-1] * 100, 1))
+            pb_perc.append(round(merged_nat_curr['pb_ratio'].rank(pct=True).iloc[-1] * 100, 1))
+            ps_perc.append(round(merged_nat_curr['ps_ratio'].rank(pct=True).iloc[-1] * 100, 1))
+            evrv_perc.append(round(merged_nat_curr['ev_revenue'].rank(pct=True).iloc[-1] * 100, 1))
+            de_perc.append(round(merged_nat_curr['debt_to_equity'].rank(pct=True).iloc[-1] * 100, 1))
+            current_perc.append(round(merged_nat_curr['current_ratio'].rank(pct=True).iloc[-1] * 100, 1))
         except:
             print('Value adding to list error!')
         print(str(share_name) + ' has been finished successfuly!')
