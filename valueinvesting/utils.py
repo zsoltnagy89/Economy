@@ -566,5 +566,64 @@ def utility_evaluation(input_df=pd.DataFrame, extra_parameters=[], owned_shares=
         plt.suptitle('(' + str(elem.capitalize()) + ' - MVA 200) / MVA 200 percentile currently is ' + str(normalized_pct)+ '% - ' + str(datetime.date.today()))
         plt.legend()
         plt.show()
+    return input_df
 
+def get_value_stock_target_prices(input_df=pd.DataFrame, min_pct=0.1, max_pct=0.5, owned_shares=pd.DataFrame):
+    '''
+    Back calculate the P10 and Median price targets based on P/B, P/S and EVRev values.
+    '''
+    # result lists
+    pb_ratio_buy = []
+    pb_ratio_sell = []
+    ps_ratio_buy = []
+    ps_ratio_sell = []
+    evrev_ratio_buy = []
+    evrev_ratio_sell = []
+    # create slices from the dataframe
+    # itereate the real date data and step-by-step calclute the buy & sell values
+    for date in input_df['real_date'].values:
+        # create DataFrame slice, which contains every older data than the date
+        ttm_slice = input_df.loc[input_df['real_date'] <= date]
+        # P10, P50 quantile target value to buy or sell estimation
+        pb_quantiles = ttm_slice['pb_ratio'].dropna().quantile([min_pct, max_pct]).to_list()
+        ps_quantiles = ttm_slice['ps_ratio'].dropna().quantile([min_pct, max_pct]).to_list()
+        evrev_quantiles = ttm_slice['ev_revenue'].dropna().quantile([min_pct, max_pct]).to_list()
+        # calculate target buy & sell prices
+        pb_ratio_buy_price = pb_quantiles[0] * ttm_slice['bv_per_share'].iloc[-1]
+        pb_ratio_sell_price = pb_quantiles[1] * ttm_slice['bv_per_share'].iloc[-1]
+        ps_ratio_buy_price = (ps_quantiles[0] * ttm_slice['revenue_ttm'].iloc[-1]) / ttm_slice['shares'].iloc[-1]
+        ps_ratio_sell_price = (ps_quantiles[1] * ttm_slice['revenue_ttm'].iloc[-1]) / ttm_slice['shares'].iloc[-1]
+        evrev_ratio_buy_price = ((evrev_quantiles[0] * ttm_slice['revenue_ttm'].iloc[-1]) + ttm_slice['cash'].iloc[-1] - ttm_slice['total_liab'].iloc[-1]) / ttm_slice['shares'].iloc[-1]
+        evrev_ratio_sell_price = ((evrev_quantiles[1] * ttm_slice['revenue_ttm'].iloc[-1]) + ttm_slice['cash'].iloc[-1] - ttm_slice['total_liab'].iloc[-1]) / ttm_slice['shares'].iloc[-1]
+        # add values to list
+        pb_ratio_buy.append(pb_ratio_buy_price)
+        pb_ratio_sell.append(pb_ratio_sell_price)
+        ps_ratio_buy.append(ps_ratio_buy_price)
+        ps_ratio_sell.append(ps_ratio_sell_price)
+        evrev_ratio_buy.append(evrev_ratio_buy_price)
+        evrev_ratio_sell.append(evrev_ratio_sell_price)
+    # add listed data to the DataFrame
+    input_df['pb_ratio_buy'] = pb_ratio_buy
+    input_df['pb_ratio_sell'] = pb_ratio_sell
+    input_df['ps_ratio_buy'] = ps_ratio_buy
+    input_df['ps_ratio_sell'] = ps_ratio_sell
+    input_df['evrev_ratio_buy'] = evrev_ratio_buy
+    input_df['evrev_ratio_sell'] = evrev_ratio_sell
+    # visulaize
+    metrics = ['pb_ratio', 'ps_ratio', 'evrev_ratio']
+    for elem in metrics:
+        plt.figure(figsize=(15,5))
+        # plot the raw and MVG AVG values vs the date
+        plt.plot(input_df['real_date'], input_df['share_price'],label= 'Share Price')
+        plt.plot(input_df['real_date'], input_df[f'{elem}_buy'],label= 'Buy Price')
+        plt.plot(input_df['real_date'], input_df[f'{elem}_sell'],label= 'Sell Price')
+        plt.xlim(left=input_df['real_date'].values[0], right=input_df['real_date'].values[-1])
+        # plot vertical lines based on the owned share data
+        for date in owned_shares['date'].values:
+            plt.axvline(date, color='green', linewidth=2, label='Owned stock')
+        plt.legend(loc='best')
+        plt.xlabel('Date')
+        plt.xlabel('Share Price')
+        plt.suptitle(str(elem.capitalize()) + ' (' + str(datetime.date.today()) + ') BUY price: ' + str(input_df[f'{elem}_buy'].iloc[-1])+ ', SELL price: ' + str(input_df[f'{elem}_sell'].iloc[-1]))
+        plt.show()
     return input_df
