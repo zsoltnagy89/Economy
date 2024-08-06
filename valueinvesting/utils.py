@@ -185,6 +185,9 @@ def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame, report='Q'):
     '''
     Calulate Financial ratios. Evaluate short-term, long-term debt, management performance and test economic moat.
     '''
+    # replace potential 0 dividend to np.Nan in case of nice-to-have measures
+    for column in ['acc_rec', 'acc_pay', 'cash', 'inventory']:
+        input[column] = input[column].replace(0, np.NaN)
     # evauleat short term debt
     output['current_ratio'] = input['curr_assets'] / input['curr_liab']
     output['quick_ratio'] = (input['curr_assets'] - input['inventory']) / input['curr_liab']
