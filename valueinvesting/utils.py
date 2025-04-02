@@ -181,7 +181,7 @@ def ratios_input_filter(input=pd.DataFrame):
             ].copy()
     return ratios
 
-def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame, report='Q'):
+def evaluate_performance(input=pd.DataFrame, output=pd.DataFrame):
     '''
     Calulate Financial ratios. Evaluate short-term, long-term debt, management performance and test economic moat.
     '''
@@ -232,7 +232,7 @@ def add_share_prices_to_value_ratios(share_name, data, ratios_nat_curr):
     merged_nat_curr = merged_nat_curr.reset_index(drop=True)
     return merged_nat_curr
 
-def price_ratios(input=pd.DataFrame, report='Q'):
+def price_ratios(input=pd.DataFrame):
     '''
     Calculate Value metrics from quaterly data. The original metrics have been develoed to annual data. I use quaterly data.
     '''
